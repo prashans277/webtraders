@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradingGuru — Master the Markets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+<style>
+:root{
+  --bg:#0A0E14; --panel:#0F1621; --panel2:#131B27; --line:#1E2836;
+  --bull:#00D98A; --bear:#FF5C5C; --gold:#E8B84B;
+  --text:#E7ECF2; --muted:#7C8894; --muted2:#54606D;
+}
+body{background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; overflow-x:hidden;}
+.font-display{font-family:'Space Grotesk',sans-serif;}
+.font-mono{font-family:'JetBrains Mono',monospace;}
+.eyebrow{font-family:'JetBrains Mono',monospace; letter-spacing:.18em; text-transform:uppercase; font-size:.72rem; color:var(--bull);}
+.panel{background:linear-gradient(165deg, var(--panel) 0%, #0D1520 100%); border:1px solid rgba(255,255,255,.07); box-shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 14px 30px -18px rgba(0,0,0,.6);}
+.panel2{background:linear-gradient(165deg, var(--panel2) 0%, #101825 100%); border:1px solid rgba(255,255,255,.06);}
+.grad-bull{background:linear-gradient(135deg,#00D98A,#00A868);}
+.grad-gold{background:linear-gradient(135deg,#F2D07A,#C99A32);}
+.text-grad{background:linear-gradient(135deg,#E7ECF2 30%,#00D98A 100%); -webkit-background-clip:text; background-clip:text; color:transparent;}
+.glow{box-shadow:0 0 0 1px rgba(0,217,138,.15), 0 12px 40px -12px rgba(0,217,138,.25);}
+.hairline{border-top:1px solid var(--line);}
+.hover-lift{transition:transform .4s cubic-bezier(.16,.84,.24,1), box-shadow .4s cubic-bezier(.16,.84,.24,1), border-color .4s ease;}
+.hover-lift:hover{transform:translateY(-7px); border-color:rgba(0,217,138,.38); box-shadow:0 22px 44px -18px rgba(0,0,0,.55), 0 0 0 1px rgba(0,217,138,.12), 0 0 30px -10px rgba(0,217,138,.22);}
+.reveal{opacity:0; transform:translateY(24px); transition:opacity .8s cubic-bezier(.16,.84,.24,1), transform .8s cubic-bezier(.16,.84,.24,1);}
+.reveal.in{opacity:1; transform:translateY(0);}
+
+/* Modal / glassmorphism */
+.modal-overlay{position:fixed; inset:0; background:rgba(6,9,13,.72); backdrop-filter:blur(6px); z-index:100; display:flex; align-items:center; justify-content:center; padding:1.25rem; opacity:0; pointer-events:none; transition:opacity .3s ease;}
+.modal-overlay.open{opacity:1; pointer-events:auto;}
+.modal-card{background:linear-gradient(165deg, rgba(19,27,39,.92), rgba(10,14,20,.96)); border:1px solid rgba(255,255,255,.08); backdrop-filter:blur(18px); box-shadow:0 30px 80px -20px rgba(0,0,0,.7), 0 0 0 1px rgba(0,217,138,.08); border-radius:1.1rem; width:100%; max-width:440px; max-height:88vh; overflow-y:auto; transform:translateY(16px) scale(.98); transition:transform .35s cubic-bezier(.16,.84,.24,1);}
+.modal-overlay.open .modal-card{transform:translateY(0) scale(1);}
+.date-pill,.time-pill{transition:all .25s ease;}
+.date-pill.active,.time-pill.active{background:var(--bull); color:#06120C; border-color:var(--bull) !important; font-weight:600;}
+::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
+
+/* Forms / validation */
+.field-input{width:100%; margin-top:.375rem; background:transparent; border:1px solid var(--line); border-radius:.5rem; padding:.6rem 1rem; font-size:.875rem; transition:border-color .25s ease; color:var(--text);}
+.field-input:focus{outline:none; border-color:var(--bull);}
+.field-input.invalid{border-color:var(--bear) !important;}
+.field-error{color:var(--bear); font-size:11px; margin-top:5px; min-height:14px; display:none;}
+.field-error.show{display:block;}
+
+/* Spinner */
+.spinner{width:15px; height:15px; border:2px solid rgba(255,255,255,.3); border-top-color:currentColor; border-radius:50%; display:inline-block; animation:spin .7s linear infinite; vertical-align:-2px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.btn-loading .btn-label{opacity:0;}
+.btn-loading{position:relative; pointer-events:none;}
+.btn-loading .spinner{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);}
+
+/* Selectable slot card */
+
+/* Auth view toggle */
+.auth-view.hidden{display:none;}
+
+/* Admin table */
+#adminTableBody tr{border-top:1px solid var(--line);}
+#adminTableBody td{padding:.65rem .75rem; white-space:nowrap;}
+.status-pill{font-size:10px; font-family:'JetBrains Mono',monospace; padding:2px 8px; border-radius:999px; display:inline-block;}
+.status-pending{background:rgba(232,184,75,.15); color:var(--gold); border:1px solid rgba(232,184,75,.35);}
+.status-paid{background:rgba(0,217,138,.15); color:var(--bull); border:1px solid rgba(0,217,138,.35);}
+
+/* Nav */
+#nav{transition:background .35s ease, border-color .35s ease, backdrop-filter .35s ease; border-bottom:1px solid transparent;}
+#nav.scrolled{background:rgba(10,14,20,.85); backdrop-filter:blur(14px); border-color:var(--line);}
+.navlink{position:relative; color:var(--muted); transition:color .25s;}
+.navlink::after{content:'';position:absolute;left:0;bottom:-6px;width:0;height:1px;background:var(--bull);transition:width .25s;}
+.navlink:hover{color:var(--text);} .navlink:hover::after{width:100%;}
+
+/* buttons */
+.btn-primary{background:var(--bull); color:#06120C; font-weight:600; transition:box-shadow .3s ease, transform .3s ease, filter .3s ease;}
+.btn-primary:hover{box-shadow:0 10px 34px -8px rgba(0,217,138,.6); transform:translateY(-2px); filter:brightness(1.04);}
+.btn-primary:active{transform:translateY(0); box-shadow:0 4px 14px -6px rgba(0,217,138,.5);}
+.btn-ghost{border:1px solid var(--line); color:var(--text); transition:border-color .3s ease, background .3s ease, transform .3s ease;}
+.btn-ghost-green{border:1px solid rgba(0,217,138,.4); color:var(--bull); background:rgba(0,217,138,.06); transition:border-color .3s ease, background .3s ease, transform .3s ease;}
+.btn-ghost-green:hover{border-color:var(--bull); background:rgba(0,217,138,.14); transform:translateY(-2px);}
+.btn-ghost:hover{border-color:rgba(0,217,138,.4); background:rgba(255,255,255,.03); transform:translateY(-2px);}
+.btn-ghost:active{transform:translateY(0);}
+
+/* accordion */
+.acc-content{max-height:0; overflow:hidden; transition:max-height .4s ease;}
+.acc-item.open .acc-content{max-height:400px;}
+.acc-item.open .chev{transform:rotate(45deg);}
+.chev{transition:transform .3s;}
+
+</style>
+</head>
+<body class="antialiased">
+
+<!-- ================= NAV ================= -->
+<header id="nav" class="fixed top-0 left-0 right-0 z-50">
+  <div class="max-w-7xl mx-auto px-6 lg:px-10 flex items-center justify-between h-20">
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-lg grad-bull flex items-center justify-center">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 17L9 11L13 15L21 6" stroke="#06120C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 6H21V12" stroke="#06120C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <span class="font-display font-semibold text-lg tracking-tight">TradingGuru</span>
+    </div>
+    <nav class="hidden lg:flex items-center gap-8 text-sm">
+      <a href="#home" class="navlink">Home</a>
+      <a href="#courses" class="navlink">Courses</a>
+      <a href="#books" class="navlink">Books</a>
+      <a href="#mentorship" class="navlink">Mentorship</a>
+      <a href="#community-resources" class="navlink">Free Resources</a>
+      <a href="contact.html" class="navlink">Contact</a>
+    </nav>
+    <div class="hidden lg:flex items-center gap-3" id="navAuthArea">
+      <button type="button" class="text-sm text-[var(--muted)] hover:text-white transition auth-open-btn" data-mode="login">Log in</button>
+      <button type="button" class="btn-primary text-sm px-4 py-2 rounded-lg auth-open-btn" data-mode="signup">Sign up</button>
+    </div>
+    <button id="mobileBtn" class="lg:hidden text-xl"><i class="fa-solid fa-bars"></i></button>
+  </div>
+  <div id="mobileMenu" class="hidden lg:hidden panel border-t border-[var(--line)] px-6 py-5 space-y-4 text-sm">
+    <a href="#home" class="block navlink">Home</a>
+    <a href="#courses" class="block navlink">Courses</a>
+    <a href="#books" class="block navlink">Books</a>
+    <a href="#mentorship" class="block navlink">Mentorship</a>
+    <a href="#community-resources" class="block navlink">Free Resources</a>
+    <a href="contact.html" class="block navlink">Contact</a>
+    <div class="flex gap-3 pt-2" id="navAuthAreaMobile">
+      <button type="button" class="flex-1 text-center btn-ghost rounded-lg py-2 auth-open-btn" data-mode="login">Log in</button>
+      <button type="button" class="flex-1 text-center btn-primary rounded-lg py-2 auth-open-btn" data-mode="signup">Sign up</button>
+    </div>
+  </div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section id="home" class="relative pt-40 pb-24 px-6 lg:px-10 overflow-hidden">
+  <div class="absolute inset-0 pointer-events-none" style="background:radial-gradient(700px 400px at 50% 10%, rgba(0,217,138,.10), transparent 60%);"></div>
+  <div class="max-w-3xl mx-auto text-center relative reveal">
+    <span class="eyebrow">Trading &amp; Investing Education</span>
+    <h1 class="font-display text-5xl md:text-6xl font-semibold leading-[1.05] mt-5 tracking-tight">
+      Master the Markets.<br><span class="text-grad">Build Wealth</span> with Confidence.
+    </h1>
+    <p class="text-[var(--muted)] text-lg mt-6 max-w-xl mx-auto leading-relaxed">
+      TradingGuru gives you a structured path through trading, investing, and risk management — real curriculum, real mentors, real accountability. No shortcuts, no signals-only hype.
+    </p>
+    <div class="flex flex-wrap justify-center gap-4 mt-9">
+      <a href="#courses" class="btn-primary rounded-lg px-6 py-3.5 text-sm">Start Learning</a>
+      <a href="#courses" class="btn-ghost rounded-lg px-6 py-3.5 text-sm">Explore Courses <i class="fa-solid fa-arrow-right ml-1"></i></a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SECTION 1: LEARN TRADING ================= -->
+<section class="py-16 px-6 lg:px-10">
+  <div class="max-w-7xl mx-auto">
+    <div class="max-w-2xl reveal">
+      <span class="eyebrow">Curriculum Foundations</span>
+      <h2 class="font-display text-4xl font-semibold mt-4 tracking-tight">One platform, every stage of the trader's journey.</h2>
+      <p class="text-[var(--muted)] mt-4 leading-relaxed">Whether you're placing your first trade or refining a five-year-old strategy, TradingGuru meets you where you are — with a syllabus that goes deep, not just wide.</p>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-8">
+      <div class="reveal panel rounded-lg p-4 hover-lift"><i class="fa-solid fa-building-columns text-[var(--bull)] text-sm mb-2"></i><h4 class="font-semibold text-sm mb-1">Stock Market</h4><p class="text-xs text-[var(--muted)] leading-snug">How exchanges and orders actually work.</p></div>
+      <div class="reveal panel rounded-lg p-4 hover-lift"><i class="fa-solid fa-arrows-left-right text-[var(--bull)] text-sm mb-2"></i><h4 class="font-semibold text-sm mb-1">Swing Trading</h4><p class="text-xs text-[var(--muted)] leading-snug">Multi-day moves with structured entries.</p></div>
+      <div class="reveal panel rounded-lg p-4 hover-lift"><i class="fa-solid fa-bolt text-[var(--bull)] text-sm mb-2"></i><h4 class="font-semibold text-sm mb-1">Intraday</h4><p class="text-xs text-[var(--muted)] leading-snug">Fast setups inside the day's range.</p></div>
+      <div class="reveal panel rounded-lg p-4 hover-lift"><i class="fa-solid fa-layer-group text-[var(--bull)] text-sm mb-2"></i><h4 class="font-semibold text-sm mb-1">Futures &amp; Options</h4><p class="text-xs text-[var(--muted)] leading-snug">Derivatives and strategy construction.</p></div>
+      <div class="reveal panel rounded-lg p-4 hover-lift"><i class="fa-solid fa-chart-simple text-[var(--bull)] text-sm mb-2"></i><h4 class="font-semibold text-sm mb-1">Technical Analysis</h4><p class="text-xs text-[var(--muted)] leading-snug">Patterns, indicators, and confluence.</p></div>
+      <div class="reveal panel rounded-lg p-4 hover-lift"><i class="fa-solid fa-brain text-[var(--bull)] text-sm mb-2"></i><h4 class="font-semibold text-sm mb-1">Trading Psychology</h4><p class="text-xs text-[var(--muted)] leading-snug">The discipline layer behind every system.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COURSES ================= -->
+<section id="courses" class="py-24 px-6 lg:px-10 panel2 border-y border-[var(--line)]">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center max-w-2xl mx-auto reveal">
+      <span class="eyebrow">Structured Courses</span>
+      <h2 class="font-display text-4xl font-semibold mt-4 tracking-tight">Master Trading with Two Complete Learning Programs</h2>
+      <p class="text-[var(--muted)] mt-4 leading-relaxed">Choose the learning path that matches your experience. Our courses are designed to take you from beginner to professional trader with practical knowledge, live examples, and risk management strategies.</p>
+    </div>
+
+    <!-- ===== Two premium course cards ===== -->
+    <div class="grid lg:grid-cols-2 gap-8 lg:gap-10 mt-14 items-stretch" id="courseCardGrid"></div>
+  </div>
+</section>
+
+<!-- ================= CHECKOUT MODAL (Enroll / Booking / Bookstore / Membership) ================= -->
+<div id="checkoutModal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <div class="text-[10px] font-mono text-[var(--muted)]" id="coStepLabel">CHECKOUT</div>
+          <h3 class="font-display font-semibold text-lg mt-1" id="coTitle">Checkout</h3>
+        </div>
+        <button type="button" id="coClose" class="w-8 h-8 rounded-lg panel2 flex items-center justify-center hover:border-[var(--bear)] transition"><i class="fa-solid fa-xmark text-sm"></i></button>
+      </div>
+
+      <!-- STEP: email -->
+      <form id="coStepEmail" class="hidden">
+        <div class="panel2 rounded-lg p-3 text-xs text-[var(--muted)] mb-5" id="coSummaryLine"></div>
+        <label class="text-xs text-[var(--muted)]">Email Address</label>
+        <input id="coEmail" type="email" class="field-input" placeholder="you@email.com">
+        <p class="field-error" id="coEmailError">Please enter a valid email address.</p>
+        <div id="coTelegramField" class="hidden mt-3.5">
+          <label class="text-xs text-[var(--muted)]">Telegram Username</label>
+          <input id="coTelegram" class="field-input" placeholder="@yourusername">
+          <p class="field-error" id="coTelegramError">Enter a valid @username (5+ characters).</p>
+        </div>
+        <button type="submit" id="coSubmitBtn" class="w-full btn-primary rounded-lg py-2.5 text-sm mt-4">
+          <span class="btn-label">Continue</span>
+        </button>
+      </form>
+
+      <!-- STEP: processing -->
+      <div id="coStepProcessing" class="hidden text-center py-10">
+        <div class="spinner mx-auto mb-4" style="width:24px;height:24px; color:var(--bull); border-color:rgba(0,217,138,.25); border-top-color:var(--bull);"></div>
+        <p class="text-sm text-[var(--muted)]">Redirecting to secure payment…</p>
+      </div>
+
+      <!-- STEP: success -->
+      <div id="coStepSuccess" class="hidden text-center py-4">
+        <div class="w-14 h-14 rounded-full grad-bull mx-auto flex items-center justify-center mb-5"><i class="fa-solid fa-check text-[#06120C] text-xl"></i></div>
+        <h4 class="font-display font-semibold text-lg mb-1">✅ Payment Successful</h4>
+        <p class="text-sm text-[var(--muted)] mb-6">Thank you for choosing TradingGuru.<br>A confirmation email has been sent.</p>
+        <button type="button" id="coReturnHome" class="w-full btn-ghost rounded-lg py-2.5 text-sm">Return to Home</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= AUTH MODAL (Login / Sign Up) ================= -->
+<div id="authModal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="font-display font-semibold text-lg" id="authTitle">Welcome back</h3>
+        <button type="button" id="authClose" class="w-8 h-8 rounded-lg panel2 flex items-center justify-center hover:border-[var(--bear)] transition"><i class="fa-solid fa-xmark text-sm"></i></button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="authViewLogin" class="auth-view">
+        <form id="loginForm" class="space-y-4">
+          <div>
+            <label class="text-xs text-[var(--muted)]">Email or Phone Number</label>
+            <input id="loginId" class="field-input" placeholder="you@email.com or +91 98765 43210">
+            <p class="field-error" id="loginIdError">Enter a valid email or phone number.</p>
+          </div>
+          <div>
+            <label class="text-xs text-[var(--muted)]">Password</label>
+            <input id="loginPassword" type="password" class="field-input" placeholder="••••••••">
+            <p class="field-error" id="loginPasswordError">Password must be at least 6 characters.</p>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <label class="flex items-center gap-2 text-[var(--muted)]"><input type="checkbox" id="loginRemember" class="accent-[var(--bull)]"> Remember me</label>
+            <button type="button" id="forgotPasswordBtn" class="text-[var(--bull)] font-mono">Forgot Password?</button>
+          </div>
+          <p class="field-error text-[var(--bull)]" id="forgotPasswordMsg" style="color:var(--bull)">Password reset link sent — check your inbox.</p>
+          <button type="submit" id="loginSubmitBtn" class="w-full btn-primary rounded-lg py-2.5 text-sm mt-1">
+            <span class="btn-label">Login</span>
+          </button>
+          <button type="button" id="toSignupBtn" class="w-full btn-ghost rounded-lg py-2.5 text-sm">Create Account</button>
+        </form>
+      </div>
+
+      <!-- SIGNUP -->
+      <div id="authViewSignup" class="auth-view hidden">
+        <form id="signupForm" class="space-y-3.5">
+          <div>
+            <label class="text-xs text-[var(--muted)]">Full Name</label>
+            <input id="suName" class="field-input" placeholder="Your full name">
+            <p class="field-error" id="suNameError">Please enter your full name.</p>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs text-[var(--muted)]">Age</label>
+              <input id="suAge" type="number" min="13" max="120" class="field-input" placeholder="25">
+              <p class="field-error" id="suAgeError">Enter a valid age (13+).</p>
+            </div>
+            <div>
+              <label class="text-xs text-[var(--muted)]">Occupation</label>
+              <input id="suOccupation" class="field-input" placeholder="e.g. Engineer">
+              <p class="field-error" id="suOccupationError">Required.</p>
+            </div>
+          </div>
+          <div>
+            <label class="text-xs text-[var(--muted)]">Email Address</label>
+            <input id="suEmail" type="email" class="field-input" placeholder="you@email.com">
+            <p class="field-error" id="suEmailError">Please enter a valid email address.</p>
+          </div>
+          <div>
+            <label class="text-xs text-[var(--muted)]">Phone Number</label>
+            <input id="suPhone" class="field-input" placeholder="+91 98765 43210">
+            <p class="field-error" id="suPhoneError">Please enter a valid phone number.</p>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs text-[var(--muted)]">Password</label>
+              <input id="suPassword" type="password" class="field-input" placeholder="••••••••">
+              <p class="field-error" id="suPasswordError">Min. 6 characters.</p>
+            </div>
+            <div>
+              <label class="text-xs text-[var(--muted)]">Confirm Password</label>
+              <input id="suConfirm" type="password" class="field-input" placeholder="••••••••">
+              <p class="field-error" id="suConfirmError">Passwords don't match.</p>
+            </div>
+          </div>
+          <button type="submit" id="signupSubmitBtn" class="w-full btn-primary rounded-lg py-2.5 text-sm mt-1">
+            <span class="btn-label">Create Account</span>
+          </button>
+          <button type="button" id="toLoginBtn" class="w-full btn-ghost rounded-lg py-2.5 text-sm">Already have an account? Log in</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= BOOKS ================= -->
+<section id="books" class="py-24 px-6 lg:px-10 panel2 border-y border-[var(--line)]">
+  <div class="max-w-7xl mx-auto">
+    <span class="eyebrow reveal">TradingGuru Bookstore</span>
+    <h2 class="font-display text-4xl font-semibold mt-4 tracking-tight reveal">Written by us. Read by our students.</h2>
+    <div id="bookGrid" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12"></div>
+  </div>
+</section>
+
+<!-- ================= MENTORSHIP ================= -->
+<section id="mentorship" class="py-24 px-6 lg:px-10">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center max-w-2xl mx-auto reveal">
+      <span class="eyebrow">Personalized Mentorship</span>
+      <h2 class="font-display text-4xl font-semibold mt-4 tracking-tight">Learn Directly From TradingGuru</h2>
+      <p class="text-[var(--muted)] mt-4">Weekly live classes, portfolio reviews, and a community that holds you accountable.</p>
+    </div>
+    <div class="flex flex-wrap justify-center gap-3 mt-10 reveal">
+      <span class="panel2 rounded-full px-4 py-2 text-xs font-mono text-[var(--muted)]"><i class="fa-solid fa-video text-[var(--bull)] mr-1.5"></i>Weekly Zoom Classes</span>
+      <span class="panel2 rounded-full px-4 py-2 text-xs font-mono text-[var(--muted)]"><i class="fa-solid fa-signal text-[var(--bull)] mr-1.5"></i>Live Trading</span>
+      <span class="panel2 rounded-full px-4 py-2 text-xs font-mono text-[var(--muted)]"><i class="fa-solid fa-chart-pie text-[var(--bull)] mr-1.5"></i>Portfolio Review</span>
+      <span class="panel2 rounded-full px-4 py-2 text-xs font-mono text-[var(--muted)]"><i class="fa-solid fa-list-check text-[var(--bull)] mr-1.5"></i>Assignments</span>
+      <span class="panel2 rounded-full px-4 py-2 text-xs font-mono text-[var(--muted)]"><i class="fa-solid fa-map text-[var(--bull)] mr-1.5"></i>Trading Plans</span>
+      <span class="panel2 rounded-full px-4 py-2 text-xs font-mono text-[var(--muted)]"><i class="fa-solid fa-people-group text-[var(--bull)] mr-1.5"></i>Lifetime Community</span>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-7 mt-14 max-w-5xl mx-auto">
+      <div class="reveal panel rounded-2xl p-8 hover-lift" style="border:1px solid rgba(232,184,75,.35);">
+        <div class="text-xs font-mono" style="color:var(--gold)">TRADINGGURU PREMIUM</div>
+        <h3 class="font-display font-semibold text-xl mt-2">Premium Community</h3>
+        <div class="font-mono text-3xl mt-3">₹399<span class="text-sm text-[var(--muted)]">/mo</span></div>
+        <ul class="text-sm text-[var(--muted)] mt-6 space-y-3">
+          <li><i class="fa-solid fa-check mr-2" style="color:var(--gold)"></i>Live Market Analysis</li>
+          <li><i class="fa-solid fa-check mr-2" style="color:var(--gold)"></i>Market News</li>
+          <li><i class="fa-solid fa-check mr-2" style="color:var(--gold)"></i>Economic Calendar</li>
+          <li><i class="fa-solid fa-check mr-2" style="color:var(--gold)"></i>Members Chat</li>
+          <li><i class="fa-brands fa-telegram mr-2" style="color:#34AADF"></i>Telegram Community included</li>
+        </ul>
+        <button class="w-full rounded-lg py-2.5 text-sm mt-8 checkout-btn" style="background:var(--gold); color:#241A05;" data-type="premium" data-title="Premium Community">Join Premium</button>
+      </div>
+      <div class="reveal panel rounded-2xl p-8 hover-lift">
+        <h3 class="font-display font-semibold text-xl">Starter</h3>
+        <div class="font-mono text-3xl mt-3">₹4,999<span class="text-sm text-[var(--muted)]">/mo</span></div>
+        <ul class="text-sm text-[var(--muted)] mt-6 space-y-3">
+          <li><i class="fa-solid fa-check text-[var(--bull)] mr-2"></i>Weekly group Zoom classes</li>
+          <li><i class="fa-solid fa-check text-[var(--bull)] mr-2"></i>Community access</li>
+          <li><i class="fa-solid fa-check text-[var(--bull)] mr-2"></i>Monthly Q&amp;A</li>
+        </ul>
+        <button class="w-full btn-ghost-green rounded-lg py-2.5 text-sm mt-8 checkout-btn" data-type="membership" data-title="Starter Plan">Join Now</button>
+      </div>
+      <div class="reveal rounded-2xl p-8 hover-lift relative" style="background:linear-gradient(180deg, rgba(0,217,138,.10), transparent); border:1px solid rgba(0,217,138,.4);">
+        <span class="absolute -top-3 left-8 grad-bull text-[#06120C] text-[10px] font-mono font-semibold px-3 py-1 rounded-full">MOST POPULAR</span>
+        <h3 class="font-display font-semibold text-xl">Professional</h3>
+        <div class="font-mono text-3xl mt-3">₹9,999<span class="text-sm text-[var(--muted)]">/mo</span></div>
+        <ul class="text-sm text-[var(--muted)] mt-6 space-y-3">
+          <li><i class="fa-solid fa-check text-[var(--bull)] mr-2"></i>Everything in Starter</li>
+          <li><i class="fa-solid fa-check text-[var(--bull)] mr-2"></i>Live trading sessions</li>
+          <li><i class="fa-solid fa-check text-[var(--bull)] mr-2"></i>Portfolio reviews</li>
+          <li><i class="fa-solid fa-check text-[var(--bull)] mr-2"></i>Weekly assignments</li>
+        </ul>
+        <button class="w-full btn-primary rounded-lg py-2.5 text-sm mt-8 checkout-btn" data-type="membership" data-title="Professional Plan">Join Now</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COMMUNITY / SOCIAL ================= -->
+<section id="community-resources" class="py-16 px-6 lg:px-10 scroll-mt-28">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center max-w-xl mx-auto reveal mb-10">
+      <span class="eyebrow">Community</span>
+      <h2 class="font-display text-4xl font-semibold mt-4 tracking-tight">Free Community Resources</h2>
+      <p class="text-[var(--muted)] mt-4">No cost, no login — just follow along wherever you already are.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+      <div class="reveal panel rounded-2xl p-7 hover-lift flex flex-col h-full">
+        <i class="fa-brands fa-telegram text-2xl mb-4" style="color:#34AADF"></i>
+        <h3 class="font-display font-semibold text-lg mb-2">Telegram Community</h3>
+        <p class="text-sm text-[var(--muted)] leading-relaxed flex-1">Join our free Telegram community for daily market updates and trading discussions.</p>
+        <button type="button" class="w-full btn-primary rounded-lg py-2.5 text-sm mt-6 telegram-join-btn">Join Now</button>
+      </div>
+
+      <div class="reveal panel rounded-2xl p-7 hover-lift flex flex-col h-full">
+        <i class="fa-brands fa-instagram text-2xl mb-4" style="color:#E1306C"></i>
+        <h3 class="font-display font-semibold text-lg mb-2">Instagram</h3>
+        <p class="text-sm text-[var(--muted)] leading-relaxed flex-1">Follow us for daily trading updates, educational reels, and market insights.</p>
+        <a href="https://instagram.com" target="_blank" rel="noopener" class="w-full text-center btn-primary rounded-lg py-2.5 text-sm mt-6 inline-block">Follow Now</a>
+      </div>
+
+      <div class="reveal panel rounded-2xl p-7 hover-lift flex flex-col h-full">
+        <i class="fa-brands fa-youtube text-2xl mb-4" style="color:#FF0000"></i>
+        <h3 class="font-display font-semibold text-lg mb-2">YouTube</h3>
+        <p class="text-sm text-[var(--muted)] leading-relaxed flex-1">Subscribe for free trading tutorials, market analysis, and beginner-friendly videos.</p>
+        <a href="https://youtube.com" target="_blank" rel="noopener" class="w-full text-center btn-primary rounded-lg py-2.5 text-sm mt-6 inline-block">Subscribe Now</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section class="py-24 px-6 lg:px-10">
+  <div class="max-w-3xl mx-auto">
+    <div class="text-center reveal">
+      <span class="eyebrow">FAQ</span>
+      <h2 class="font-display text-3xl font-semibold mt-4">Questions, answered</h2>
+    </div>
+    <div id="faqList" class="mt-10 space-y-3"></div>
+  </div>
+</section>
+
+<!-- ================= CONTACT ================= -->
+<!-- ================= CALLBACK / WHATSAPP CALLOUT ================= -->
+<section class="py-16 px-6 lg:px-10 panel2 border-t border-[var(--line)]">
+  <div class="max-w-7xl mx-auto">
+    <div class="panel rounded-3xl p-8 lg:p-10 reveal flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+      <div>
+        <h3 class="font-display text-2xl font-semibold">Got any doubts or interested in a plan?</h3>
+        <p class="text-sm text-[var(--muted)] mt-2 max-w-lg leading-relaxed">We're just a message away! Whether you're unsure which plan suits you or want to know more, we're here to help.</p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-3 shrink-0">
+        <button type="button" id="requestCallbackBtn" class="panel2 rounded-full px-6 py-3.5 text-sm flex items-center justify-center gap-2 hover-lift whitespace-nowrap"><i class="fa-solid fa-phone text-[var(--bull)]"></i>Request for Callback</button>
+        <a href="https://wa.me/919876543210" target="_blank" rel="noopener" class="panel2 rounded-full px-6 py-3.5 text-sm flex items-center justify-center gap-2 hover-lift whitespace-nowrap"><i class="fa-brands fa-whatsapp" style="color:#25D366"></i>Message on WhatsApp</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer class="px-6 lg:px-10 py-10 hairline">
+  <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-6">
+    <div class="flex items-center gap-2.5 shrink-0">
+      <div class="w-8 h-8 rounded-lg grad-bull flex items-center justify-center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 17L9 11L13 15L21 6" stroke="#06120C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <span class="font-display font-semibold">TradingGuru</span>
+    </div>
+    <nav class="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm text-[var(--muted)]">
+      <a href="about.html" class="hover:text-white transition">About</a><span class="text-[var(--line)]">|</span>
+      <a href="contact.html" class="hover:text-white transition">Contact us</a><span class="text-[var(--line)]">|</span>
+      <a href="#mentorship" class="hover:text-white transition">Pricing</a><span class="text-[var(--line)]">|</span>
+      <a href="privacy.html" class="hover:text-white transition">Privacy Policy</a><span class="text-[var(--line)]">|</span>
+      <a href="#" class="hover:text-white transition">Terms and Conditions</a><span class="text-[var(--line)]">|</span>
+      <a href="#" class="hover:text-white transition">Cancellation and Refund Policy</a>
+    </nav>
+    <div class="flex gap-3 shrink-0">
+      <a href="#" class="w-9 h-9 rounded-lg panel flex items-center justify-center hover-lift"><i class="fa-brands fa-telegram"></i></a>
+      <a href="#" class="w-9 h-9 rounded-lg panel flex items-center justify-center hover-lift"><i class="fa-brands fa-instagram"></i></a>
+      <a href="#" class="w-9 h-9 rounded-lg panel flex items-center justify-center hover-lift"><i class="fa-brands fa-x-twitter"></i></a>
+      <a href="#" class="w-9 h-9 rounded-lg panel flex items-center justify-center hover-lift"><i class="fa-brands fa-linkedin"></i></a>
+      <a href="#" class="w-9 h-9 rounded-lg panel flex items-center justify-center hover-lift"><i class="fa-brands fa-youtube"></i></a>
+    </div>
+  </div>
+  <div class="max-w-7xl mx-auto text-center mt-8 text-xs text-[var(--muted2)]">
+    <p>Copyright © 2026 TradingGuru | All rights reserved.</p>
+    <p class="mt-1">Trading involves risk. Education only, not financial advice.</p>
+  </div>
+  <div class="max-w-7xl mx-auto text-center mt-3">
+    <button type="button" id="openAdminBtn" class="text-[10px] font-mono text-[var(--muted2)] hover:text-[var(--muted)] transition">Admin Dashboard</button>
+  </div>
+</footer>
+
+<!-- ================= ENQUIRY / CALLBACK MODAL ================= -->
+<div id="enquiryModal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-[10px] font-mono text-[var(--muted)]">ENQUIRY</div>
+        <button type="button" id="enquiryClose" class="w-8 h-8 rounded-lg panel2 flex items-center justify-center hover:border-[var(--bear)] transition"><i class="fa-solid fa-xmark text-sm"></i></button>
+      </div>
+
+      <div id="enquiryFormStep">
+        <h3 class="font-display font-semibold text-xl text-center mt-2">Have a question? Request a callback</h3>
+        <p class="text-sm text-[var(--muted)] text-center mt-2 mb-6">Let us know what you're looking for. We'll assist you right away.</p>
+        <form id="enquiryForm" class="space-y-4">
+          <div>
+            <input id="enqName" class="field-input" placeholder="Enter your name">
+            <p class="field-error" id="enqNameError">Please enter your name.</p>
+          </div>
+          <div>
+            <input id="enqEmail" type="email" class="field-input" placeholder="Enter your email (optional)">
+            <p class="field-error" id="enqEmailError">Please enter a valid email address.</p>
+          </div>
+          <div>
+            <input id="enqPhone" class="field-input" placeholder="Enter your phone number">
+            <p class="field-error" id="enqPhoneError">Please enter a valid phone number.</p>
+          </div>
+          <div>
+            <textarea id="enqMessage" rows="4" class="field-input" placeholder="Write your message/query/opinion..."></textarea>
+            <p class="field-error" id="enqMessageError">Please write a short message.</p>
+          </div>
+          <div class="flex gap-3 pt-1">
+            <button type="button" id="enquiryCancel" class="flex-1 btn-ghost rounded-lg py-2.5 text-sm">Cancel</button>
+            <button type="submit" id="enquirySubmitBtn" class="flex-1 btn-primary rounded-lg py-2.5 text-sm"><span class="btn-label">Submit now</span></button>
+          </div>
+        </form>
+      </div>
+
+      <div id="enquirySuccessStep" class="hidden text-center py-4">
+        <div class="w-14 h-14 rounded-full grad-bull mx-auto flex items-center justify-center mb-5"><i class="fa-solid fa-check text-[#06120C] text-xl"></i></div>
+        <h4 class="font-display font-semibold text-lg mb-2">Request Received</h4>
+        <p class="text-sm text-[var(--muted)] mb-6">Thanks — our team will call you back shortly.</p>
+        <button type="button" id="enquiryDone" class="w-full btn-ghost rounded-lg py-2.5 text-sm">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TELEGRAM JOIN MODAL ================= -->
+<div id="telegramModal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <div class="text-[10px] font-mono text-[var(--muted)]" id="tgStepLabel">JOIN TELEGRAM COMMUNITY</div>
+          <h3 class="font-display font-semibold text-lg mt-1">Telegram Community Access</h3>
+        </div>
+        <button type="button" id="tgClose" class="w-8 h-8 rounded-lg panel2 flex items-center justify-center hover:border-[var(--bear)] transition"><i class="fa-solid fa-xmark text-sm"></i></button>
+      </div>
+
+      <!-- STEP: details form -->
+      <form id="tgForm" class="space-y-3.5">
+        <div>
+          <label class="text-xs text-[var(--muted)]">Full Name</label>
+          <input id="tgName" class="field-input" placeholder="Your full name">
+          <p class="field-error" id="tgNameError">Please enter your full name.</p>
+        </div>
+        <div>
+          <label class="text-xs text-[var(--muted)]">Email Address</label>
+          <input id="tgEmail" type="email" class="field-input" placeholder="you@email.com">
+          <p class="field-error" id="tgEmailError">Please enter a valid email address.</p>
+        </div>
+        <div>
+          <label class="text-xs text-[var(--muted)]">Phone Number</label>
+          <input id="tgPhone" class="field-input" placeholder="+91 98765 43210">
+          <p class="field-error" id="tgPhoneError">Please enter a valid phone number.</p>
+        </div>
+        <div>
+          <label class="text-xs text-[var(--muted)]">Telegram Username</label>
+          <input id="tgUsername" class="field-input" placeholder="@yourusername">
+          <p class="field-error" id="tgUsernameError">Enter a valid @username (5+ characters).</p>
+        </div>
+        <button type="submit" id="tgContinueBtn" disabled class="w-full btn-primary rounded-lg py-2.5 text-sm mt-2 opacity-40 cursor-not-allowed">
+          <span class="btn-label">Continue to Payment</span>
+        </button>
+      </form>
+
+      <!-- STEP: payment -->
+      <div id="tgStepPayment" class="hidden">
+        <div class="panel2 rounded-lg p-4 text-sm space-y-1.5 mb-5">
+          <div class="flex justify-between"><span class="text-[var(--muted)]">Membership</span><span>Telegram Community</span></div>
+          <div class="flex justify-between"><span class="text-[var(--muted)]">Amount</span><span class="font-mono text-[var(--bull)]">₹499</span></div>
+        </div>
+        <button type="button" id="tgPayBtn" class="w-full btn-primary rounded-lg py-2.5 text-sm">
+          <span class="btn-label">Pay ₹499 &amp; Join</span>
+        </button>
+        <button type="button" id="tgEditDetails" class="w-full btn-ghost rounded-lg py-2.5 text-sm mt-3">Edit Details</button>
+      </div>
+
+      <!-- STEP: processing -->
+      <div id="tgStepProcessing" class="hidden text-center py-10">
+        <div class="spinner mx-auto mb-4" style="width:24px;height:24px; color:var(--bull); border-color:rgba(0,217,138,.25); border-top-color:var(--bull);"></div>
+        <p class="text-sm text-[var(--muted)]">Processing payment…</p>
+      </div>
+
+      <!-- STEP: success -->
+      <div id="tgStepSuccess" class="hidden text-center py-4">
+        <div class="w-14 h-14 rounded-full grad-bull mx-auto flex items-center justify-center mb-5"><i class="fa-solid fa-check text-[#06120C] text-xl"></i></div>
+        <h4 class="font-display font-semibold text-lg mb-2">Payment Successful!</h4>
+        <p class="text-sm text-[var(--muted)] mb-6 leading-relaxed">Your request has been received. Our team will verify your payment and provide Telegram community access shortly.</p>
+        <button type="button" id="tgDone" class="w-full btn-ghost rounded-lg py-2.5 text-sm">Done</button>
+      </div>
+
+      <!-- STEP: failure -->
+      <div id="tgStepFailure" class="hidden text-center py-4">
+        <div class="w-14 h-14 rounded-full flex items-center justify-center mb-5 mx-auto" style="background:rgba(255,92,92,.15); border:1px solid rgba(255,92,92,.4);"><i class="fa-solid fa-xmark text-[var(--bear)] text-xl"></i></div>
+        <h4 class="font-display font-semibold text-lg mb-2">Payment Failed</h4>
+        <p class="text-sm text-[var(--muted)] mb-6 leading-relaxed">Your payment could not be completed or was cancelled. No charges were made — you can retry without re-entering your details.</p>
+        <button type="button" id="tgRetry" class="w-full btn-primary rounded-lg py-2.5 text-sm">Retry Payment</button>
+        <button type="button" id="tgFailEdit" class="w-full btn-ghost rounded-lg py-2.5 text-sm mt-3">Edit Details</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ADMIN DASHBOARD (demo, local session only) ================= -->
+<div id="adminModal" class="modal-overlay">
+  <div class="modal-card" style="max-width:720px;">
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-2">
+        <div>
+          <div class="text-[10px] font-mono text-[var(--muted)]">ADMIN</div>
+          <h3 class="font-display font-semibold text-lg mt-1">Telegram Community — Members</h3>
+        </div>
+        <button type="button" id="adminClose" class="w-8 h-8 rounded-lg panel2 flex items-center justify-center hover:border-[var(--bear)] transition"><i class="fa-solid fa-xmark text-sm"></i></button>
+      </div>
+      <p class="text-xs text-[var(--muted)] mb-4">Demo view only — stored in this browser session, not a real database.</p>
+      <div class="overflow-x-auto rounded-lg border border-[var(--line)]">
+        <table class="w-full text-xs">
+          <thead>
+            <tr class="panel2 text-left text-[var(--muted)] font-mono uppercase tracking-wide">
+              <th class="p-3">User ID</th><th class="p-3">Name</th><th class="p-3">Email</th><th class="p-3">Phone</th><th class="p-3">Telegram</th><th class="p-3">Status</th><th class="p-3">Date &amp; Time</th>
+            </tr>
+          </thead>
+          <tbody id="adminTableBody"></tbody>
+        </table>
+      </div>
+      <div id="adminEmptyState" class="text-center text-sm text-[var(--muted)] py-10 hidden">No members yet — successful Telegram joins will appear here.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// nav scroll state
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', ()=> nav.classList.toggle('scrolled', window.scrollY > 20));
+
+// mobile menu
+const mobileBtn = document.getElementById('mobileBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+mobileBtn.addEventListener('click', ()=> mobileMenu.classList.toggle('hidden'));
+
+// ===== Offset-aware instant scroll for in-page nav links (desktop + mobile + footer) =====
+function smoothScrollToHash(hash){
+  const target = document.querySelector(hash);
+  if(!target) return;
+  const navOffset = nav.offsetHeight + 24; // keep section title clear of the fixed navbar
+  const targetY = target.getBoundingClientRect().top + window.pageYOffset - navOffset;
+  if(Math.abs(window.pageYOffset - targetY) < 2) return; // already there — do nothing
+  window.scrollTo(0, targetY);
+}
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  const hash = a.getAttribute('href');
+  if(hash.length > 1){
+    a.addEventListener('click', (e)=>{
+      if(document.querySelector(hash)){
+        e.preventDefault();
+        smoothScrollToHash(hash);
+        mobileMenu.classList.add('hidden');
+      }
+    });
+  }
+});
+
+// reveal on scroll
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+},{threshold:0.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+// courses data — two premium programs
+const courses = [
+  {
+    key:'beginner', icon:'fa-seedling', tag:'Beginner • Complete Course', popular:false,
+    title:'Beginner Trading Masterclass',
+    desc:'This is a complete beginner-friendly trading course designed for someone with no prior knowledge. It covers everything required to start trading confidently and build a strong foundation.',
+    topics:['Introduction to Stock Market','Trading Basics','NSE & BSE Overview','Types of Markets','Candlestick Patterns','Support & Resistance','Trend Identification','Price Action Basics','Chart Reading','Time Frames','Risk Management','Position Sizing','Trading Psychology','Capital Management','Swing Trading Basics','Intraday Basics','Futures & Options Introduction','Live Trade Examples','Common Beginner Mistakes','Trading Checklist'],
+    price:'₹2,999'
+  },
+  {
+    key:'technical', icon:'fa-chart-line', tag:'Intermediate to Advanced', popular:true,
+    title:'Technical Analysis Masterclass',
+    desc:'A complete technical analysis program focused on professional trading strategies, chart analysis, institutional concepts, and advanced market reading.',
+    topics:['Advanced Price Action','Support & Resistance Strategies','Trendline Analysis','Chart Patterns','Candlestick Combinations','Moving Averages','RSI','MACD','Bollinger Bands','Volume Analysis','Market Structure','Breakout Strategies','Pullback Entries','Supply & Demand','Smart Money Concepts','Liquidity Concepts','Order Blocks','Swing Trading Setups','Intraday Strategies','Options Trading Strategies','Trade Planning','Risk to Reward','Live Market Analysis','Real Trade Examples'],
+    price:'₹4,999'
+  },
+];
+
+document.getElementById('courseCardGrid').innerHTML = courses.map(c=>`
+  <div class="reveal rounded-3xl p-8 lg:p-10 hover-lift relative flex flex-col ${c.popular ? '' : 'panel'}"
+       style="${c.popular ? 'background:linear-gradient(180deg, rgba(0,217,138,.10), var(--panel) 40%); border:1px solid rgba(0,217,138,.4);' : ''}">
+    ${c.popular ? '<span class="absolute -top-3 left-8 grad-bull text-[#06120C] text-[10px] font-mono font-semibold px-3 py-1 rounded-full">MOST POPULAR</span>' : ''}
+    <div class="flex items-center gap-4 mb-5">
+      <div class="w-14 h-14 rounded-xl grad-bull flex items-center justify-center text-xl shrink-0"><i class="fa-solid ${c.icon} text-[#06120C]"></i></div>
+      <div>
+        <div class="text-[10px] font-mono text-[var(--muted)] uppercase tracking-wide">${c.tag}</div>
+        <h3 class="font-display text-2xl font-semibold mt-1 leading-tight">${c.title}</h3>
+      </div>
+    </div>
+    <p class="text-sm text-[var(--muted)] leading-relaxed mb-6">${c.desc}</p>
+
+    <div class="text-[10px] font-mono text-[var(--muted)] uppercase tracking-wide mb-3">Topics Included</div>
+    <div class="grid sm:grid-cols-2 gap-x-4 gap-y-2 mb-6">
+      ${c.topics.map(t=>`<div class="flex items-start gap-2 text-xs text-[var(--muted)] leading-snug"><i class="fa-solid fa-check text-[var(--bull)] mt-0.5 shrink-0"></i><span>${t}</span></div>`).join('')}
+    </div>
+
+    <div class="flex items-center justify-between pt-6 mt-auto hairline">
+      <span class="font-mono text-2xl font-semibold text-[var(--bull)]">${c.price}</span>
+      <button class="btn-primary rounded-lg px-6 py-3 text-sm checkout-btn" data-type="enroll" data-title="${c.title}">Enroll Now</button>
+    </div>
+  </div>`).join('');
+document.querySelectorAll('#courseCardGrid .reveal').forEach(el=>io.observe(el));
+
+// books data
+const books = [
+  {t:'TradingGuru Blueprint', a:'By TradingGuru', img:'📗', price:'₹499'},
+  {t:'Price Action Mastery', a:'By TradingGuru', img:'📕', price:'₹599'},
+  {t:'Winning Trader Psychology', a:'By TradingGuru', img:'📙', price:'₹549'},
+  {t:'Risk Management Secrets', a:'By TradingGuru', img:'📔', price:'₹449'},
+];
+document.getElementById('bookGrid').innerHTML = books.map(b=>`
+  <div class="reveal panel rounded-xl p-5 hover-lift">
+    <div class="h-32 rounded-lg flex items-center justify-center text-4xl mb-4" style="background:linear-gradient(135deg, rgba(0,217,138,.14), rgba(0,217,138,.02));">${b.img}</div>
+    <h4 class="font-semibold text-sm mb-1">${b.t}</h4>
+    <div class="text-xs text-[var(--muted)] mb-4">${b.a}</div>
+    <div class="flex items-center justify-between">
+      <span class="font-mono text-[var(--bull)] font-semibold text-sm">${b.price}</span>
+      <button class="btn-primary rounded-lg px-3 py-1.5 text-xs checkout-btn" data-type="bookstore" data-title="${b.t}">Buy Now</button>
+    </div>
+  </div>`).join('');
+document.querySelectorAll('#bookGrid .reveal').forEach(el=>io.observe(el));
+
+// ===== Reusable payment layer =====
+// PaymentService: placeholder gateway logic. Swap redirectToPayment's internals
+// with a real provider later (Razorpay / Stripe / Cashfree / PhonePe / PayU).
+const PaymentService = {
+  redirectToPayment(order){
+    // order: {type, title/email/etc.}
+    // In production this would build a gateway session and do:
+    //   window.location.href = gatewayCheckoutUrl;
+    // For now we simulate the network + redirect round trip, including an
+    // occasional failure so the retry/error UI can be exercised realistically.
+    return new Promise((resolve, reject)=>{
+      setTimeout(()=>{
+        const success = Math.random() > 0.18; // ~82% simulated success rate
+        if(success) resolve({ok:true, orderId:'PAY-'+Math.random().toString(36).slice(2,8).toUpperCase()});
+        else reject(new Error('Payment declined or cancelled by user'));
+      }, 1300);
+    });
+  }
+};
+
+function setBtnLoading(btn, loading){
+  btn.disabled = loading;
+  btn.classList.toggle('btn-loading', loading);
+  if(loading && !btn.querySelector('.spinner')){
+    const sp = document.createElement('span');
+    sp.className='spinner';
+    sp.style.color = btn.classList.contains('btn-primary') ? '#06120C' : 'var(--text)';
+    btn.appendChild(sp);
+  } else if(!loading){
+    const sp = btn.querySelector('.spinner');
+    if(sp) sp.remove();
+  }
+}
+function showFieldError(inputEl, errorEl, show){
+  inputEl.classList.toggle('invalid', show);
+  errorEl.classList.toggle('show', show);
+}
+function isValidEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); }
+function isValidPhone(v){ return /^[+]?[\d\s-]{8,15}$/.test(v.trim()); }
+function isEmailOrPhone(v){ return isValidEmail(v) || isValidPhone(v); }
+
+// ===== Checkout modal (Enroll / Booking / Bookstore / Membership / Premium) =====
+(function(){
+  const overlay = document.getElementById('checkoutModal');
+  const stepLabel = document.getElementById('coStepLabel');
+  const titleEl = document.getElementById('coTitle');
+  const stepEmail = document.getElementById('coStepEmail');
+  const summaryLine = document.getElementById('coSummaryLine');
+  const emailInput = document.getElementById('coEmail');
+  const emailError = document.getElementById('coEmailError');
+  const telegramField = document.getElementById('coTelegramField');
+  const telegramInput = document.getElementById('coTelegram');
+  const telegramError = document.getElementById('coTelegramError');
+  const submitBtn = document.getElementById('coSubmitBtn');
+  const stepProcessing = document.getElementById('coStepProcessing');
+  const stepSuccess = document.getElementById('coStepSuccess');
+
+  let order = {type:'', title:'', email:'', telegram:''};
+
+  function resetSteps(){
+    [stepEmail, stepProcessing, stepSuccess].forEach(el=>el.classList.add('hidden'));
+    emailInput.value=''; showFieldError(emailInput, emailError, false);
+    telegramInput.value=''; showFieldError(telegramInput, telegramError, false);
+    telegramField.classList.add('hidden');
+  }
+
+  function open(type, title){
+    order = {type, title, email:'', telegram:''};
+    titleEl.textContent = title || 'Checkout';
+    resetSteps();
+    stepLabel.textContent = 'CHECKOUT';
+    summaryLine.textContent = title;
+    if(type === 'premium'){
+      telegramField.classList.remove('hidden');
+    }
+    submitBtn.querySelector('.btn-label').textContent = type === 'enroll' ? 'Continue' : 'Proceed to Payment';
+    stepEmail.classList.remove('hidden');
+    overlay.classList.add('open');
+    document.body.style.overflow='hidden';
+  }
+  function close(){
+    overlay.classList.remove('open');
+    document.body.style.overflow='';
+  }
+
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.checkout-btn');
+    if(btn) open(btn.dataset.type, btn.dataset.title);
+  });
+  document.getElementById('coClose').addEventListener('click', close);
+  overlay.addEventListener('click', (e)=>{ if(e.target===overlay) close(); });
+  document.getElementById('coReturnHome').addEventListener('click', ()=>{
+    close();
+    document.querySelector('#home').scrollIntoView();
+  });
+
+  stepEmail.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const emailValid = isValidEmail(emailInput.value);
+    showFieldError(emailInput, emailError, !emailValid);
+
+    let telegramValid = true;
+    if(order.type === 'premium'){
+      telegramValid = /^@?[a-zA-Z0-9_]{5,}$/.test(telegramInput.value.trim());
+      showFieldError(telegramInput, telegramError, !telegramValid);
+    }
+    if(!emailValid || !telegramValid) return;
+
+    order.email = emailInput.value.trim();
+    if(order.type === 'premium'){
+      const raw = telegramInput.value.trim();
+      order.telegram = raw.startsWith('@') ? raw : '@'+raw;
+    }
+
+    setBtnLoading(submitBtn, true);
+    stepEmail.classList.add('hidden');
+    stepProcessing.classList.remove('hidden');
+    stepLabel.textContent = 'PROCESSING';
+
+    try{
+      await PaymentService.redirectToPayment(order);
+      stepProcessing.classList.add('hidden');
+      stepSuccess.classList.remove('hidden');
+      stepLabel.textContent = 'CONFIRMED';
+    }catch(err){
+      stepProcessing.classList.add('hidden');
+      stepEmail.classList.remove('hidden');
+      emailError.textContent = 'Something went wrong. Please try again.';
+      showFieldError(emailInput, emailError, true);
+    }finally{
+      setBtnLoading(submitBtn, false);
+    }
+  });
+})();
+
+// ===== Auth modal (Login / Sign Up) =====
+(function(){
+  const overlay = document.getElementById('authModal');
+  const title = document.getElementById('authTitle');
+  const viewLogin = document.getElementById('authViewLogin');
+  const viewSignup = document.getElementById('authViewSignup');
+
+  const loginForm = document.getElementById('loginForm');
+  const loginId = document.getElementById('loginId');
+  const loginIdError = document.getElementById('loginIdError');
+  const loginPassword = document.getElementById('loginPassword');
+  const loginPasswordError = document.getElementById('loginPasswordError');
+  const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+  const forgotBtn = document.getElementById('forgotPasswordBtn');
+  const forgotMsg = document.getElementById('forgotPasswordMsg');
+
+  const signupForm = document.getElementById('signupForm');
+  const suName = document.getElementById('suName'), suNameError = document.getElementById('suNameError');
+  const suAge = document.getElementById('suAge'), suAgeError = document.getElementById('suAgeError');
+  const suOccupation = document.getElementById('suOccupation'), suOccupationError = document.getElementById('suOccupationError');
+  const suEmail = document.getElementById('suEmail'), suEmailError = document.getElementById('suEmailError');
+  const suPhone = document.getElementById('suPhone'), suPhoneError = document.getElementById('suPhoneError');
+  const suPassword = document.getElementById('suPassword'), suPasswordError = document.getElementById('suPasswordError');
+  const suConfirm = document.getElementById('suConfirm'), suConfirmError = document.getElementById('suConfirmError');
+  const signupSubmitBtn = document.getElementById('signupSubmitBtn');
+
+  let currentUser = null;
+
+  function showMode(mode){
+    title.textContent = mode==='login' ? 'Welcome back' : 'Create your account';
+    viewLogin.classList.toggle('hidden', mode!=='login');
+    viewSignup.classList.toggle('hidden', mode!=='signup');
+    forgotMsg.classList.remove('show');
+  }
+  function open(mode){
+    showMode(mode || 'login');
+    overlay.classList.add('open');
+    document.body.style.overflow='hidden';
+  }
+  function close(){
+    overlay.classList.remove('open');
+    document.body.style.overflow='';
+  }
+  function updateNavForUser(name){
+    const label = `Hi, ${name.split(' ')[0]}`;
+    const desktopHTML = `<span class="text-sm text-[var(--text)] font-medium">${label}</span><button type="button" id="logoutBtn" class="btn-ghost text-sm px-4 py-2 rounded-lg">Log out</button>`;
+    document.getElementById('navAuthArea').innerHTML = desktopHTML;
+    document.getElementById('navAuthAreaMobile').innerHTML = `<button type="button" id="logoutBtnMobile" class="w-full text-center btn-ghost rounded-lg py-2">Log out (${label})</button>`;
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
+    document.getElementById('logoutBtnMobile')?.addEventListener('click', logout);
+  }
+  function logout(){
+    currentUser = null;
+    location.reload();
+  }
+
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.auth-open-btn');
+    if(btn) open(btn.dataset.mode);
+  });
+  document.getElementById('authClose').addEventListener('click', close);
+  overlay.addEventListener('click', (e)=>{ if(e.target===overlay) close(); });
+  document.getElementById('toSignupBtn').addEventListener('click', ()=> showMode('signup'));
+  document.getElementById('toLoginBtn').addEventListener('click', ()=> showMode('login'));
+
+  forgotBtn.addEventListener('click', ()=>{
+    forgotMsg.classList.add('show');
+  });
+
+  loginForm.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const idValid = isEmailOrPhone(loginId.value);
+    const pwValid = loginPassword.value.length >= 6;
+    showFieldError(loginId, loginIdError, !idValid);
+    showFieldError(loginPassword, loginPasswordError, !pwValid);
+    if(!idValid || !pwValid) return;
+
+    setBtnLoading(loginSubmitBtn, true);
+    await new Promise(r=>setTimeout(r, 900));
+    setBtnLoading(loginSubmitBtn, false);
+
+    const namePart = loginId.value.includes('@') ? loginId.value.split('@')[0] : 'Trader';
+    currentUser = {name: namePart};
+    updateNavForUser(currentUser.name);
+    close();
+    document.querySelector('#home').scrollIntoView();
+  });
+
+  signupForm.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const checks = [
+      [suName, suNameError, suName.value.trim().length >= 2],
+      [suAge, suAgeError, +suAge.value >= 13 && +suAge.value <= 120],
+      [suOccupation, suOccupationError, suOccupation.value.trim().length >= 2],
+      [suEmail, suEmailError, isValidEmail(suEmail.value)],
+      [suPhone, suPhoneError, isValidPhone(suPhone.value)],
+      [suPassword, suPasswordError, suPassword.value.length >= 6],
+      [suConfirm, suConfirmError, suConfirm.value === suPassword.value && suConfirm.value.length >= 6],
+    ];
+    let allValid = true;
+    checks.forEach(([input, errEl, valid])=>{ showFieldError(input, errEl, !valid); if(!valid) allValid=false; });
+    if(!allValid) return;
+
+    setBtnLoading(signupSubmitBtn, true);
+    await new Promise(r=>setTimeout(r, 1000));
+    setBtnLoading(signupSubmitBtn, false);
+
+    currentUser = {name: suName.value.trim()};
+    updateNavForUser(currentUser.name);
+    close();
+    document.querySelector('#home').scrollIntoView();
+  });
+})();
+
+// FAQ
+const faqs = [
+  {q:'Do I need prior trading experience?', a:'No. The Beginner track starts from the basics of how markets and orders work, before moving into charts and strategy.'},
+  {q:'Are the mentorship sessions live?', a:'Yes, all mentorship sessions run live over Zoom, with recordings available afterward for Professional and Elite members.'},
+  {q:'Is this financial advice?', a:'No. TradingGuru is an education platform. Nothing here should be treated as personalized investment or financial advice.'},
+  {q:'Can I cancel my subscription anytime?', a:'Yes, monthly plans can be cancelled anytime from your account settings with no lock-in period.'},
+];
+document.getElementById('faqList').innerHTML = faqs.map((f,i)=>`
+  <div class="acc-item panel rounded-xl overflow-hidden">
+    <button class="acc-head w-full flex items-center justify-between px-6 py-4 text-left text-sm font-medium">
+      ${f.q}<span class="chev text-[var(--bull)]">+</span>
+    </button>
+    <div class="acc-content px-6"><p class="text-sm text-[var(--muted)] pb-5 leading-relaxed">${f.a}</p></div>
+  </div>`).join('');
+document.querySelectorAll('.acc-head').forEach(h=>h.addEventListener('click',()=>{
+  h.closest('.acc-item').classList.toggle('open');
+}));
+
+// ===== Admin "database" (demo, in-memory for this browser session) =====
+// In production this data would be written by the payment webhook to a real
+// backend/database, not stored client-side.
+const AdminDB = {
+  members: [],
+  add(record){ this.members.unshift(record); AdminUI.render(); }
+};
+let memberSeq = 1000;
+
+const AdminUI = (function(){
+  const overlay = document.getElementById('adminModal');
+  const tbody = document.getElementById('adminTableBody');
+  const empty = document.getElementById('adminEmptyState');
+  function render(){
+    if(AdminDB.members.length === 0){
+      tbody.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    tbody.innerHTML = AdminDB.members.map(m=>`
+      <tr>
+        <td class="font-mono text-[var(--bull)]">${m.userId}</td>
+        <td>${m.name}</td>
+        <td>${m.email}</td>
+        <td>${m.phone}</td>
+        <td>${m.telegram}</td>
+        <td><span class="status-pill status-${m.status}">${m.status === 'paid' ? 'Payment Received' : 'Pending Verification'}</span></td>
+        <td class="font-mono">${m.datetime}</td>
+      </tr>`).join('');
+  }
+  function open(){ overlay.classList.add('open'); document.body.style.overflow='hidden'; render(); }
+  function close(){ overlay.classList.remove('open'); document.body.style.overflow=''; }
+  document.getElementById('openAdminBtn').addEventListener('click', open);
+  document.getElementById('adminClose').addEventListener('click', close);
+  overlay.addEventListener('click', (e)=>{ if(e.target===overlay) close(); });
+  return {render};
+})();
+
+// ===== Telegram Community join flow =====
+(function(){
+  const overlay = document.getElementById('telegramModal');
+  const stepLabel = document.getElementById('tgStepLabel');
+  const form = document.getElementById('tgForm');
+  const name = document.getElementById('tgName'), nameErr = document.getElementById('tgNameError');
+  const email = document.getElementById('tgEmail'), emailErr = document.getElementById('tgEmailError');
+  const phone = document.getElementById('tgPhone'), phoneErr = document.getElementById('tgPhoneError');
+  const username = document.getElementById('tgUsername'), usernameErr = document.getElementById('tgUsernameError');
+  const continueBtn = document.getElementById('tgContinueBtn');
+
+  const stepPayment = document.getElementById('tgStepPayment');
+  const payBtn = document.getElementById('tgPayBtn');
+  const editDetailsBtn = document.getElementById('tgEditDetails');
+
+  const stepProcessing = document.getElementById('tgStepProcessing');
+  const stepSuccess = document.getElementById('tgStepSuccess');
+  const stepFailure = document.getElementById('tgStepFailure');
+  const retryBtn = document.getElementById('tgRetry');
+  const failEditBtn = document.getElementById('tgFailEdit');
+
+  let order = null; // retains validated details across retry, per spec (no re-entering info)
+
+  function fieldChecks(){
+    return {
+      name: name.value.trim().length >= 2,
+      email: isValidEmail(email.value),
+      phone: isValidPhone(phone.value),
+      username: /^@?[a-zA-Z0-9_]{5,}$/.test(username.value.trim()),
+    };
+  }
+  function refreshContinueState(){
+    const c = fieldChecks();
+    const allValid = c.name && c.email && c.phone && c.username;
+    continueBtn.disabled = !allValid;
+    continueBtn.classList.toggle('opacity-40', !allValid);
+    continueBtn.classList.toggle('cursor-not-allowed', !allValid);
+    return c;
+  }
+  [name,email,phone,username].forEach(inp=> inp.addEventListener('input', refreshContinueState));
+
+  function showStep(step){
+    [form, stepPayment, stepProcessing, stepSuccess, stepFailure].forEach(el=> el.classList.add('hidden'));
+    step.classList.remove('hidden');
+  }
+
+  function open(){
+    order = null;
+    form.reset();
+    [name,email,phone,username].forEach(i=>i.classList.remove('invalid'));
+    [nameErr,emailErr,phoneErr,usernameErr].forEach(e=>e.classList.remove('show'));
+    refreshContinueState();
+    stepLabel.textContent = 'STEP 1 OF 2 · YOUR DETAILS';
+    showStep(form);
+    overlay.classList.add('open');
+    document.body.style.overflow='hidden';
+  }
+  function close(){
+    overlay.classList.remove('open');
+    document.body.style.overflow='';
+  }
+
+  document.querySelectorAll('.telegram-join-btn').forEach(btn=> btn.addEventListener('click', open));
+  document.getElementById('tgClose').addEventListener('click', close);
+  overlay.addEventListener('click', (e)=>{ if(e.target===overlay) close(); });
+  document.getElementById('tgDone').addEventListener('click', close);
+
+  form.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const c = fieldChecks();
+    showFieldError(name, nameErr, !c.name);
+    showFieldError(email, emailErr, !c.email);
+    showFieldError(phone, phoneErr, !c.phone);
+    showFieldError(username, usernameErr, !c.username);
+    if(!c.name || !c.email || !c.phone || !c.username) return;
+
+    order = {
+      name: name.value.trim(),
+      email: email.value.trim(),
+      phone: phone.value.trim(),
+      telegram: username.value.trim().startsWith('@') ? username.value.trim() : '@'+username.value.trim(),
+    };
+    stepLabel.textContent = 'STEP 2 OF 2 · PAYMENT';
+    showStep(stepPayment);
+  });
+
+  editDetailsBtn.addEventListener('click', ()=>{
+    stepLabel.textContent = 'STEP 1 OF 2 · YOUR DETAILS';
+    showStep(form);
+  });
+  failEditBtn.addEventListener('click', ()=>{
+    stepLabel.textContent = 'STEP 1 OF 2 · YOUR DETAILS';
+    showStep(form);
+  });
+
+  function runPayment(){
+    setBtnLoading(payBtn, true);
+    stepLabel.textContent = 'PROCESSING';
+    showStep(stepProcessing);
+    PaymentService.redirectToPayment({type:'telegram-community', ...order}).then(res=>{
+      setBtnLoading(payBtn, false);
+      memberSeq++;
+      const record = {
+        userId: 'TG-U-'+memberSeq,
+        name: order.name, email: order.email, phone: order.phone, telegram: order.telegram,
+        status: 'paid',
+        datetime: new Date().toLocaleString('en-IN', {dateStyle:'medium', timeStyle:'short'})
+      };
+      AdminDB.add(record);
+      stepLabel.textContent = 'CONFIRMED';
+      showStep(stepSuccess);
+    }).catch(()=>{
+      setBtnLoading(payBtn, false);
+      stepLabel.textContent = 'PAYMENT FAILED';
+      showStep(stepFailure);
+    });
+  }
+  payBtn.addEventListener('click', runPayment);
+  retryBtn.addEventListener('click', runPayment);
+})();
+
+// ===== Enquiry / Request-a-callback modal =====
+(function(){
+  const overlay = document.getElementById('enquiryModal');
+  const openBtn = document.getElementById('requestCallbackBtn');
+  const closeBtn = document.getElementById('enquiryClose');
+  const cancelBtn = document.getElementById('enquiryCancel');
+  const doneBtn = document.getElementById('enquiryDone');
+  const formStep = document.getElementById('enquiryFormStep');
+  const successStep = document.getElementById('enquirySuccessStep');
+  const form = document.getElementById('enquiryForm');
+
+  const name = document.getElementById('enqName'), nameErr = document.getElementById('enqNameError');
+  const email = document.getElementById('enqEmail'), emailErr = document.getElementById('enqEmailError');
+  const phone = document.getElementById('enqPhone'), phoneErr = document.getElementById('enqPhoneError');
+  const message = document.getElementById('enqMessage'), messageErr = document.getElementById('enqMessageError');
+  const submitBtn = document.getElementById('enquirySubmitBtn');
+
+  function open(){
+    form.reset();
+    [name,email,phone,message].forEach(i=>i.classList.remove('invalid'));
+    [nameErr,emailErr,phoneErr,messageErr].forEach(e=>e.classList.remove('show'));
+    formStep.classList.remove('hidden');
+    successStep.classList.add('hidden');
+    overlay.classList.add('open');
+    document.body.style.overflow='hidden';
+  }
+  function close(){
+    overlay.classList.remove('open');
+    document.body.style.overflow='';
+  }
+
+  openBtn.addEventListener('click', open);
+  closeBtn.addEventListener('click', close);
+  cancelBtn.addEventListener('click', close);
+  doneBtn.addEventListener('click', close);
+  overlay.addEventListener('click', (e)=>{ if(e.target===overlay) close(); });
+
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const nameValid = name.value.trim().length >= 2;
+    const emailValid = email.value.trim() === '' || isValidEmail(email.value);
+    const phoneValid = isValidPhone(phone.value);
+    const messageValid = message.value.trim().length >= 5;
+
+    showFieldError(name, nameErr, !nameValid);
+    showFieldError(email, emailErr, !emailValid);
+    showFieldError(phone, phoneErr, !phoneValid);
+    showFieldError(message, messageErr, !messageValid);
+    if(!nameValid || !emailValid || !phoneValid || !messageValid) return;
+
+    setBtnLoading(submitBtn, true);
+    try{
+      await new Promise(resolve=> setTimeout(resolve, 1000)); // placeholder for a real enquiry-submit API call
+      formStep.classList.add('hidden');
+      successStep.classList.remove('hidden');
+    } finally {
+      setBtnLoading(submitBtn, false);
+    }
+  });
+})();
+</script>
+</body>
+</html>
