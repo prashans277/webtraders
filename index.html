@@ -108,6 +108,7 @@ body{background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; ov
       <a href="#mentorship" class="navlink">Mentorship</a>
       <a href="#community-resources" class="navlink">Free Resources</a>
       <a href="contact.html" class="navlink">Contact</a>
+      <button type="button" id="myLearningBtn" class="navlink flex items-center gap-1.5"><i class="fa-solid fa-graduation-cap"></i>My Learning</button>
     </nav>
     <div class="hidden lg:flex items-center gap-3" id="navAuthArea">
       <button type="button" class="text-sm text-[var(--muted)] hover:text-white transition auth-open-btn" data-mode="login">Log in</button>
@@ -122,6 +123,7 @@ body{background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; ov
     <a href="#mentorship" class="block navlink">Mentorship</a>
     <a href="#community-resources" class="block navlink">Free Resources</a>
     <a href="contact.html" class="block navlink">Contact</a>
+    <button type="button" id="myLearningBtnMobile" class="block navlink text-left w-full"><i class="fa-solid fa-graduation-cap mr-1.5"></i>My Learning</button>
     <div class="flex gap-3 pt-2" id="navAuthAreaMobile">
       <button type="button" class="flex-1 text-center btn-ghost rounded-lg py-2 auth-open-btn" data-mode="login">Log in</button>
       <button type="button" class="flex-1 text-center btn-primary rounded-lg py-2 auth-open-btn" data-mode="signup">Sign up</button>
@@ -226,6 +228,33 @@ body{background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; ov
 </div>
 
 <!-- ================= AUTH MODAL (Login / Sign Up) ================= -->
+<!-- ================= MY LEARNING MODAL ================= -->
+<div id="myLearningModal" class="modal-overlay">
+  <div class="modal-card" style="max-width:480px;">
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <div class="text-[10px] font-mono text-[var(--muted)]">MY LEARNING</div>
+          <h3 class="font-display font-semibold text-lg mt-1" id="myLearningUserLabel">Your Courses</h3>
+        </div>
+        <button type="button" id="myLearningClose" class="w-8 h-8 rounded-lg panel2 flex items-center justify-center hover:border-[var(--bear)] transition"><i class="fa-solid fa-xmark text-sm"></i></button>
+      </div>
+
+      <div id="myLearningList" class="space-y-3"></div>
+
+      <div id="myLearningEmpty" class="hidden text-center py-8">
+        <i class="fa-solid fa-book-open text-2xl text-[var(--muted)] mb-4"></i>
+        <p class="text-sm text-[var(--muted)] mb-6">No purchases yet for this account. Enroll in a course to see it here.</p>
+        <button type="button" id="myLearningBrowse" class="btn-primary rounded-lg px-6 py-2.5 text-sm">Browse Courses</button>
+      </div>
+
+      <div class="text-center mt-6 pt-5 hairline">
+        <button type="button" id="myLearningLogout" class="text-xs font-mono text-[var(--muted)] hover:text-[var(--bear)] transition">Log out</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="authModal" class="modal-overlay">
   <div class="modal-card">
     <div class="p-6">
@@ -453,8 +482,8 @@ body{background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; ov
       <a href="contact.html" class="hover:text-white transition">Contact us</a><span class="text-[var(--line)]">|</span>
       <a href="#mentorship" class="hover:text-white transition">Pricing</a><span class="text-[var(--line)]">|</span>
       <a href="privacy.html" class="hover:text-white transition">Privacy Policy</a><span class="text-[var(--line)]">|</span>
-      <a href="#" class="hover:text-white transition">Terms and Conditions</a><span class="text-[var(--line)]">|</span>
-      <a href="#" class="hover:text-white transition">Cancellation and Refund Policy</a>
+      <a href="terms.html" class="hover:text-white transition">Terms and Conditions</a><span class="text-[var(--line)]">|</span>
+      <a href="refund-policy.html" class="hover:text-white transition">Cancellation and Refund Policy</a>
     </nav>
     <div class="flex gap-3 shrink-0">
       <a href="#" class="w-9 h-9 rounded-lg panel flex items-center justify-center hover-lift"><i class="fa-brands fa-telegram"></i></a>
@@ -764,6 +793,30 @@ function isValidEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); }
 function isValidPhone(v){ return /^[+]?[\d\s-]{8,15}$/.test(v.trim()); }
 function isEmailOrPhone(v){ return isValidEmail(v) || isValidPhone(v); }
 
+// ===== Local persistence for session + purchases =====
+// IMPORTANT: This site has no real backend, so "login" and "purchase" records
+// live in this browser's localStorage only — they are NOT secure access control
+// (anyone could edit them via dev tools) and won't sync across devices. A real
+// implementation needs a server that verifies passwords and payment webhooks
+// server-side. This is here to demonstrate the intended UX end-to-end.
+const SessionStore = {
+  KEY:'tg_session',
+  get(){ try{ return JSON.parse(localStorage.getItem(this.KEY)); }catch(e){ return null; } },
+  set(user){ try{ localStorage.setItem(this.KEY, JSON.stringify(user)); }catch(e){} },
+  clear(){ try{ localStorage.removeItem(this.KEY); }catch(e){} }
+};
+const PurchaseStore = {
+  KEY:'tg_purchases',
+  getAll(){ try{ return JSON.parse(localStorage.getItem(this.KEY)) || []; }catch(e){ return []; } },
+  add(record){ const all = this.getAll(); all.push(record); try{ localStorage.setItem(this.KEY, JSON.stringify(all)); }catch(e){} },
+  getByEmail(email){
+    if(!email) return [];
+    return this.getAll().filter(r=> r.email.toLowerCase() === email.toLowerCase());
+  }
+};
+// Tracks where to send the user after they log in (e.g. "My Learning" was clicked while signed out)
+let pendingAuthRedirect = null;
+
 // ===== Checkout modal (Enroll / Booking / Bookstore / Membership / Premium) =====
 (function(){
   const overlay = document.getElementById('checkoutModal');
@@ -843,7 +896,15 @@ function isEmailOrPhone(v){ return isValidEmail(v) || isValidPhone(v); }
     stepLabel.textContent = 'PROCESSING';
 
     try{
-      await PaymentService.redirectToPayment(order);
+      const res = await PaymentService.redirectToPayment(order);
+      if(order.type === 'enroll'){
+        PurchaseStore.add({
+          email: order.email,
+          courseTitle: order.title,
+          orderId: res && res.orderId ? res.orderId : 'PAY-'+Math.random().toString(36).slice(2,8).toUpperCase(),
+          purchasedAt: new Date().toLocaleString('en-IN', {dateStyle:'medium', timeStyle:'short'})
+        });
+      }
       stepProcessing.classList.add('hidden');
       stepSuccess.classList.remove('hidden');
       stepLabel.textContent = 'CONFIRMED';
@@ -911,7 +972,24 @@ function isEmailOrPhone(v){ return isValidEmail(v) || isValidPhone(v); }
   }
   function logout(){
     currentUser = null;
+    SessionStore.clear();
     location.reload();
+  }
+  function afterAuthSuccess(){
+    close();
+    if(pendingAuthRedirect === 'myLearning'){
+      pendingAuthRedirect = null;
+      window.openMyLearningModal();
+    } else {
+      document.querySelector('#home').scrollIntoView();
+    }
+  }
+
+  // Rehydrate session on page load, if one exists in this browser
+  const existingSession = SessionStore.get();
+  if(existingSession && existingSession.name){
+    currentUser = existingSession;
+    updateNavForUser(existingSession.name);
   }
 
   document.addEventListener('click', (e)=>{
@@ -939,11 +1017,15 @@ function isEmailOrPhone(v){ return isValidEmail(v) || isValidPhone(v); }
     await new Promise(r=>setTimeout(r, 900));
     setBtnLoading(loginSubmitBtn, false);
 
-    const namePart = loginId.value.includes('@') ? loginId.value.split('@')[0] : 'Trader';
-    currentUser = {name: namePart};
+    const typedValue = loginId.value.trim();
+    const isEmail = typedValue.includes('@');
+    currentUser = {
+      name: isEmail ? typedValue.split('@')[0] : 'Trader',
+      email: isEmail ? typedValue : null
+    };
+    SessionStore.set(currentUser);
     updateNavForUser(currentUser.name);
-    close();
-    document.querySelector('#home').scrollIntoView();
+    afterAuthSuccess();
   });
 
   signupForm.addEventListener('submit', async (e)=>{
@@ -965,14 +1047,84 @@ function isEmailOrPhone(v){ return isValidEmail(v) || isValidPhone(v); }
     await new Promise(r=>setTimeout(r, 1000));
     setBtnLoading(signupSubmitBtn, false);
 
-    currentUser = {name: suName.value.trim()};
+    currentUser = {name: suName.value.trim(), email: suEmail.value.trim()};
+    SessionStore.set(currentUser);
     updateNavForUser(currentUser.name);
-    close();
-    document.querySelector('#home').scrollIntoView();
+    afterAuthSuccess();
   });
 })();
 
-// FAQ
+// ===== My Learning modal =====
+(function(){
+  const overlay = document.getElementById('myLearningModal');
+  const userLabel = document.getElementById('myLearningUserLabel');
+  const list = document.getElementById('myLearningList');
+  const empty = document.getElementById('myLearningEmpty');
+
+  function render(){
+    const session = SessionStore.get();
+    if(!session || !session.email){
+      // Logged in via phone only (no email captured) — can't match purchases by email
+      userLabel.textContent = 'Your Courses';
+      list.innerHTML = '';
+      empty.classList.remove('hidden');
+      empty.querySelector('p').textContent = session
+        ? "We couldn't find an email on this account, so we can't match purchases to it. Please log in with your email instead."
+        : 'No purchases yet for this account. Enroll in a course to see it here.';
+      return;
+    }
+    userLabel.textContent = `Hi, ${session.name.split(' ')[0]}`;
+    const purchases = PurchaseStore.getByEmail(session.email);
+    if(purchases.length === 0){
+      list.innerHTML = '';
+      empty.classList.remove('hidden');
+      empty.querySelector('p').textContent = 'No purchases yet for this account. Enroll in a course to see it here.';
+      return;
+    }
+    empty.classList.add('hidden');
+    list.innerHTML = purchases.map(p=>`
+      <div class="panel2 rounded-xl p-4 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <div class="text-sm font-semibold truncate">${p.courseTitle}</div>
+          <div class="text-[10px] font-mono text-[var(--muted)] mt-1">Purchased ${p.purchasedAt}</div>
+        </div>
+        <button type="button" class="btn-primary rounded-lg px-4 py-2 text-xs shrink-0">Continue</button>
+      </div>`).join('');
+  }
+
+  function openModal(){
+    const session = SessionStore.get();
+    if(!session){
+      pendingAuthRedirect = 'myLearning';
+      document.querySelector('.auth-open-btn[data-mode="login"]')?.click();
+      return;
+    }
+    render();
+    overlay.classList.add('open');
+    document.body.style.overflow='hidden';
+  }
+  function close(){
+    overlay.classList.remove('open');
+    document.body.style.overflow='';
+  }
+  window.openMyLearningModal = openModal;
+
+  document.getElementById('myLearningBtn').addEventListener('click', openModal);
+  document.getElementById('myLearningBtnMobile').addEventListener('click', ()=>{
+    mobileMenu.classList.add('hidden');
+    openModal();
+  });
+  document.getElementById('myLearningClose').addEventListener('click', close);
+  overlay.addEventListener('click', (e)=>{ if(e.target===overlay) close(); });
+  document.getElementById('myLearningBrowse').addEventListener('click', ()=>{
+    close();
+    document.querySelector('#courses').scrollIntoView();
+  });
+  document.getElementById('myLearningLogout').addEventListener('click', ()=>{
+    SessionStore.clear();
+    location.reload();
+  });
+})();
 const faqs = [
   {q:'Do I need prior trading experience?', a:'No. The Beginner track starts from the basics of how markets and orders work, before moving into charts and strategy.'},
   {q:'Are the mentorship sessions live?', a:'Yes, all mentorship sessions run live over Zoom, with recordings available afterward for Professional and Elite members.'},
